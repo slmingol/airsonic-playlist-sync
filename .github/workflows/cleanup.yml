@@ -1,0 +1,38 @@
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  cleanup-ghcr:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - name: Delete old container images from GHCR
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'airsonic-playlist-sync'
+          package-type: 'container'
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: 'false'
+          ignore-versions: '^(latest|main|v\d+\.\d+\.\d+)$'
+
+  cleanup-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Remove old workflow artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '7 days'
+          skip-recent: 3
