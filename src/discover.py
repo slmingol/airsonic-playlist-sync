@@ -3,6 +3,8 @@
 Helper script to discover Airsonic folder and playlist IDs.
 """
 
+__version__ = "1.0.0"
+
 import json
 import sys
 from sync_playlist import AirsonicClient

@@ -4,6 +4,8 @@ Airsonic Playlist Sync Script
 Automatically adds new music from a shared folder to a playlist.
 """
 
+__version__ = "1.0.0"
+
 import json
 import hashlib
 import random
@@ -381,6 +383,7 @@ if __name__ == '__main__':
     import argparse
     
     parser = argparse.ArgumentParser(description='Sync Airsonic folder to playlist')
+    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('--config', default='config.json', help='Path to config file')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
     parser.add_argument('--max-songs', type=int, default=15, help='Maximum number of most recent songs to keep in playlist (default: 15)')
