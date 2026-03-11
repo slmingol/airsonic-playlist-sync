@@ -2,7 +2,7 @@
 
 [![Build and Publish](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/build-and-publish.yml)
 [![Test](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/test.yml/badge.svg)](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/test.yml)
-[![GitHub release](https://img.shields.io/github/v/release/slmingol/airsonic-playlist-sync)](https://github.com/slmingol/airsonic-playlist-sync/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/slmingol/airsonic-playlist-sync?label=release)](https://github.com/slmingol/airsonic-playlist-sync/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://github.com/slmingol/airsonic-playlist-sync/pkgs/container/airsonic-playlist-sync)
