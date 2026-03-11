@@ -1,0 +1,9 @@
+{
+  "server_url": "https://airsonic-advanced.lamolabs.org",
+  "username": "your_username",
+  "password": "your_password",
+  "api_version": "1.16.1",
+  "client_name": "PlaylistSync",
+  "source_share_id": "ohBqV",
+  "target_playlist_share_id": "OSWJN"
+}

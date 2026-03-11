@@ -1,0 +1,20 @@
+# Example systemd configuration for running Airsonic sync in Docker
+# Place in ~/.config/systemd/user/ (user service) or /etc/systemd/system/ (system service)
+
+[Unit]
+Description=Airsonic Playlist Sync (Docker)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/path/to/airsonic-playlist-sync
+ExecStartPre=-/usr/bin/docker build -t airsonic-playlist-sync:latest .
+ExecStart=/usr/bin/docker run --rm \
+  --name airsonic-playlist-sync \
+  -v %h/airsonic-playlist-sync/config.json:/config/config.json:ro \
+  -v %h/airsonic-playlist-sync/logs:/app/logs \
+  airsonic-playlist-sync:latest
+
+[Install]
+WantedBy=default.target

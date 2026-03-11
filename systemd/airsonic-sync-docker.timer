@@ -1,0 +1,14 @@
+# Timer for running Airsonic sync on a schedule
+# Place in ~/.config/systemd/user/ (user service) or /etc/systemd/system/ (system service)
+
+[Unit]
+Description=Run Airsonic Playlist Sync hourly
+Requires=airsonic-sync-docker.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+config.json
+*.log
+logs/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+README.md
+setup.sh
+setup-cron.sh
+.DS_Store
