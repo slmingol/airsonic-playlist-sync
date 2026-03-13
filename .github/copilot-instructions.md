@@ -56,7 +56,7 @@ make clean       # Remove container image
 ```bash
 # CI uses test.yml workflow
 # Local: tests are run via pytest inside container
-docker build -f docker/Dockerfile -t airsonic-playlist-sync:latest .
+podman build -f docker/Dockerfile -t airsonic-playlist-sync:latest .
 ```
 
 ## CI/CD Workflows (`.github/workflows/`)
