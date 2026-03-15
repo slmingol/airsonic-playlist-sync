@@ -102,12 +102,17 @@ Use the discovery tool in a container:
 # Using the helper script
 ./run-docker-discover.sh
 
-# Or using make
+# Or using make (auto-detects docker/podman)
 make discover
 
 # Or using docker directly
 docker build -t airsonic-playlist-sync:latest .
 docker run --rm -v "$(pwd)/config.json:/config/config.json:ro" \
+  airsonic-playlist-sync:latest python3 /app/discover.py --config /config/config.json
+
+# Or using podman
+podman build -t airsonic-playlist-sync:latest .
+podman run --rm -v "$(pwd)/config.json:/config/config.json:ro" \
   airsonic-playlist-sync:latest python3 /app/discover.py --config /config/config.json
 ```
 
@@ -153,7 +158,7 @@ Add this line:
 # Using the helper script
 ./run-docker.sh --dry-run
 
-# Or using make
+# Or using make (auto-detects docker/podman)
 make run-dry
 
 # Or using docker directly
@@ -161,8 +166,14 @@ docker build -t airsonic-playlist-sync:latest .
 docker run --rm \
   -v "$(pwd)/config.json:/config/config.json:ro" \
   -v "$(pwd)/logs:/app/logs" \
-  airsonic-playlist-sync:latest \
-  python3 /app/sync_playlist.py --config /config/config.json --dry-run
+  airsonic-playlist-sync:latest --dry-run
+
+# Or using podman
+podman build -t airsonic-playlist-sync:latest .
+podman run --rm \
+  -v "$(pwd)/config.json:/config/config.json:ro" \
+  -v "$(pwd)/logs:/app/logs" \
+  airsonic-playlist-sync:latest --dry-run
 ```
 
 #### Run Once (Add Songs)

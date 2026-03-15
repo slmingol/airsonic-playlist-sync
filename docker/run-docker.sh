@@ -27,30 +27,29 @@ fi
 
 # Create logs directory if it doesn't exist
 mkdir -p logs
-Container build failed!"
+
+# Build the container
+echo "Building container image..."
+$CONTAINER_CMD build -t airsonic-playlist-sync:latest -f docker/Dockerfile .
+
+if [ $? -ne 0 ]; then
+    echo "Error: Container build failed!"
     exit 1
 fi
+
+# Parse arguments
+ARGS=""
+for arg in "$@"; do
+    ARGS="$ARGS $arg"
+done
 
 # Run the container
 echo "Running sync in container..."
 $CONTAINER_CMD run --rm \
-    -v "$SCRIPT_DIR/config.json:/config/config.json:ro" \
-    -v "$SCRIPT_DIR/logs:/app/logs
-$CONTAINER_CMD build -t airsonic-playlist-sync:latest .
-
-if [ $? -ne 0 ]; then
-    echo "Error: Docker build failed!"
-    exit 1
-fi
-
-# Run the container
-echo "Running sync in container..."
-docker run --rm \
-    -v "$SCRIPT_DIR/config.json:/config/config.json:ro" \
-    -v "$SCRIPT_DIR/logs:/app/logs" \
-    -e TZ="$(readlink /etc/localtime | sed 's#/var/db/timezone/zoneinfo/##')" \
-    airsonic-playlist-sync:latest \
-    python3 /app/sync_playlist.py --config /config/config.json $DRY_RUN
+    -v "$PROJECT_DIR/config.json:/config/config.json:ro" \
+    -v "$PROJECT_DIR/logs:/app/logs" \
+    -e TZ="${TZ:-UTC}" \
+    airsonic-playlist-sync:latest $ARGS
 
 echo
 echo "Done! Check logs/ directory for output."

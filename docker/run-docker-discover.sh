@@ -17,7 +17,20 @@ else
 fi
 
 echo "Using container runtime: $CONTAINER_CMD"
-Container build failed!"
+
+# Check if config.json exists
+if [ ! -f "config.json" ]; then
+    echo "Error: config.json not found!"
+    echo "Please create config.json with your Airsonic credentials."
+    exit 1
+fi
+
+# Build the container
+echo "Building container image..."
+$CONTAINER_CMD build -t airsonic-playlist-sync:latest -f docker/Dockerfile .
+
+if [ $? -ne 0 ]; then
+    echo "Error: Container build failed!"
     exit 1
 fi
 
@@ -25,19 +38,7 @@ fi
 echo "Running discovery in container..."
 echo
 $CONTAINER_CMD run --rm -it \
-    -v "$SCRIPT_DIR/config.json:/config/config.json:ro
-$CONTAINER_CMD build -t airsonic-playlist-sync:latest .
-
-if [ $? -ne 0 ]; then
-    echo "Error: Docker build failed!"
-    exit 1
-fi
-
-# Run the discovery tool in container
-echo "Running discovery in container..."
-echo
-docker run --rm -it \
-    -v "$SCRIPT_DIR/config.json:/config/config.json:ro" \
-    -e TZ="$(readlink /etc/localtime | sed 's#/var/db/timezone/zoneinfo/##')" \
+    -v "$PROJECT_DIR/config.json:/config/config.json:ro" \
+    -e TZ="${TZ:-UTC}" \
     airsonic-playlist-sync:latest \
     python3 /app/discover.py --config /config/config.json

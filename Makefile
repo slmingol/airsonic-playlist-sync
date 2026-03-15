@@ -17,7 +17,7 @@ build:
 
 run-dry: build
 	@mkdir -p logs
-	$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest python3 /app/sync_playlist.py --config /config/config.json --dry-run
+	$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest --dry-run
 
 run: build
 	@mkdir -p logs

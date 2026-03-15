@@ -31,5 +31,8 @@ RUN addgroup -g 1000 airsonic && \
 
 USER airsonic
 
-# Default command - can be overridden
-CMD ["python3", "/app/sync_playlist.py", "--config", "/config/config.json"]
+# Set entrypoint with config path so users only need to pass additional flags
+ENTRYPOINT ["python3", "/app/sync_playlist.py", "--config", "/config/config.json"]
+
+# Default arguments - empty so it runs normally, can be overridden with flags like --dry-run
+CMD []

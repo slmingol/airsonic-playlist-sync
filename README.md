@@ -25,6 +25,7 @@ Automatically sync music from an Airsonic/OpenSubsonic folder to a playlist, mai
 
 ### Using Docker/Podman
 
+**With Docker:**
 ```bash
 # Pull the image
 docker pull ghcr.io/slmingol/airsonic-playlist-sync:latest
@@ -34,13 +35,48 @@ cp config.example.json config.json
 # Edit config.json with your credentials
 
 # Discover folder and playlist IDs
-docker run --rm -v $(pwd)/config.json:/app/config.json ghcr.io/slmingol/airsonic-playlist-sync:latest python discover.py
+docker run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest \
+  python /app/discover.py --config /config/config.json
 
 # Run sync (dry-run first)
-docker run --rm -v $(pwd)/config.json:/app/config.json ghcr.io/slmingol/airsonic-playlist-sync:latest --dry-run
+docker run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest --dry-run
 
 # Run actual sync
-docker run --rm -v $(pwd)/config.json:/app/config.json ghcr.io/slmingol/airsonic-playlist-sync:latest
+docker run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest
+
+# Keep only 10 most recent episodes
+docker run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest --max-songs 10
+```
+
+**With Podman:**
+```bash
+# Pull the image
+podman pull ghcr.io/slmingol/airsonic-playlist-sync:latest
+
+# Create config file
+cp config.example.json config.json
+# Edit config.json with your credentials
+
+# Discover folder and playlist IDs
+podman run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest \
+  python /app/discover.py --config /config/config.json
+
+# Run sync (dry-run first)
+podman run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest --dry-run
+
+# Run actual sync
+podman run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest
+
+# Keep only 10 most recent episodes
+podman run --rm -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest --max-songs 10
 ```
 
 ### Using Python
