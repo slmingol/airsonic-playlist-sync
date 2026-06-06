@@ -225,55 +225,32 @@ def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = Fa
         client_name=config.get('client_name', 'PlaylistSync')
     )
     
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting playlist sync...")
-    
-    # Test connection
-    print("Testing connection...", end=' ')
     if not client.ping():
-        print("FAILED")
         print("Error: Could not connect to Airsonic server or authentication failed.")
         return 1
-    print("OK")
-    
-    # Get shares to find the actual IDs
-    print("Fetching shares...", end=' ')
+
     shares = client.get_shares()
-    
+
     source_share_id = config.get('source_share_id')
     target_share_id = config.get('target_playlist_share_id')
-    
-    # Find the source directory ID from share
+
     source_dir_id = None
     target_playlist_id = None
-    
+
     for share in shares:
         share_id = share.get('id')
         if share_id == source_share_id:
-            # Share entry could contain multiple items, get the first
             entries = share.get('entry', [])
             if isinstance(entries, dict):
                 entries = [entries]
             if entries:
                 source_dir_id = entries[0].get('id')
         elif share_id == target_share_id:
-            # For playlist shares
-            entries = share.get('entry', [])
-            if isinstance(entries, dict):
-                entries = [entries]
-            # We need the playlist ID, not the song IDs
-            # Try to get it from the share URL or query all playlists
             pass
-    
-    print(f"Found {len(shares)} shares")
-    
-    # If we didn't find IDs from shares, try alternative approach
-    # For playlists, query all playlists and match by name or search
+
+    playlists = client.get_playlists()
+
     if not target_playlist_id:
-        print("Fetching playlists...", end=' ')
-        playlists = client.get_playlists()
-        print(f"Found {len(playlists)} playlists")
-        
-        # If a playlist_name or playlist_id is in config, use that
         if 'target_playlist_id' in config:
             target_playlist_id = config['target_playlist_id']
         elif 'target_playlist_name' in config:
@@ -282,39 +259,35 @@ def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = Fa
                 if playlist.get('name') == target_name:
                     target_playlist_id = playlist.get('id')
                     break
-        
-        # If still not found, list playlists for user
+
         if not target_playlist_id:
             print("\nAvailable playlists:")
-            for i, playlist in enumerate(playlists, 1):
-                print(f"  {i}. {playlist.get('name')} (ID: {playlist.get('id')})")
+            for i, p in enumerate(playlists, 1):
+                print(f"  {i}. {p.get('name')} (ID: {p.get('id')})")
             print("\nPlease add 'target_playlist_id' to your config.json")
             return 1
-    
-    # Similar for source directory
+
     if not source_dir_id and 'source_directory_id' in config:
         source_dir_id = config['source_directory_id']
-    
+
     if not source_dir_id:
-        print("\nError: Could not determine source directory ID.")
+        print("Error: Could not determine source directory ID.")
         print("Please add 'source_directory_id' to your config.json")
         return 1
-    
-    print(f"Source directory ID: {source_dir_id}")
-    print(f"Target playlist ID: {target_playlist_id}")
-    
-    # Get all songs from source directory
-    print("Fetching songs from source directory...", end=' ')
+
     source_songs = get_all_songs_from_directory(client, source_dir_id, recursive=True)
-    print(f"Found {len(source_songs)} songs")
-    
-    # Get current playlist contents
-    print("Fetching current playlist...", end=' ')
+
     playlist = client.get_playlist(target_playlist_id)
     playlist_entries = playlist.get('entry', [])
     if isinstance(playlist_entries, dict):
         playlist_entries = [playlist_entries]
-    print(f"Contains {len(playlist_entries)} songs")
+
+    source_dir_name = client.get_music_directory(source_dir_id).get('name', source_dir_id)
+    target_playlist_name = next((p.get('name') for p in playlists if str(p.get('id')) == str(target_playlist_id)), target_playlist_id)
+
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Playlist Sync")
+    print(f"  Source  : {source_dir_name} (ID: {source_dir_id}, {len(source_songs)} episodes)")
+    print(f"  Target  : {target_playlist_name} (ID: {target_playlist_id}, {len(playlist_entries)} current)")
     
     # Helper function to extract date from title for sorting
     def get_sort_key(song):
