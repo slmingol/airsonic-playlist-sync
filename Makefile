@@ -13,15 +13,15 @@ help:
 	@echo "make discover - Find folder/playlist IDs"
 
 build:
-	$(CONTAINER_CMD) build --quiet $(DNS_FLAGS) -f docker/Dockerfile -t airsonic-playlist-sync:latest . > /dev/null
+	@$(CONTAINER_CMD) build --quiet $(DNS_FLAGS) -f docker/Dockerfile -t airsonic-playlist-sync:latest . > /dev/null
 
 run-dry: build
 	@mkdir -p logs
-	$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest --dry-run
+	@$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest --dry-run
 
 run: build
 	@mkdir -p logs
-	$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest
+	@$(CONTAINER_CMD) run --rm $(DNS_FLAGS) -v "$(PWD)/config.json:/config/config.json:ro" -v "$(PWD)/logs:/app/logs" airsonic-playlist-sync:latest
 
 discover: build
-	$(CONTAINER_CMD) run --rm -it $(DNS_FLAGS) --entrypoint python3 -v "$(PWD)/config.json:/config/config.json:ro" airsonic-playlist-sync:latest /app/discover.py --config /config/config.json
+	@$(CONTAINER_CMD) run --rm -it $(DNS_FLAGS) --entrypoint python3 -v "$(PWD)/config.json:/config/config.json:ro" airsonic-playlist-sync:latest /app/discover.py --config /config/config.json
