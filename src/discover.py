@@ -87,20 +87,50 @@ def discover_ids(config_path: str = 'config.json'):
     except Exception as e:
         print(f"Error fetching playlists: {e}")
     
-    # Get music folders
+    # Get music folders and their top-level directories
     print("\n" + "=" * 70)
-    print("MUSIC FOLDERS")
+    print("MUSIC FOLDERS & DIRECTORIES")
     print("=" * 70)
     try:
         response = client._make_request('getMusicFolders')
         folders = response.get('musicFolders', {}).get('musicFolder', [])
         if isinstance(folders, dict):
             folders = [folders]
-        
+
         if folders:
             for folder in folders:
-                print(f"\nFolder: {folder.get('name')}")
-                print(f"  ID: {folder.get('id')}")
+                folder_id = folder.get('id')
+                print(f"\nFolder: {folder.get('name')} (ID: {folder_id})")
+                # Get indexes (top-level artist/directory listing) for this folder
+                try:
+                    idx_response = client._make_request('getIndexes', {'musicFolderId': folder_id})
+                    indexes = idx_response.get('indexes', {})
+                    artist_list = []
+                    for index in indexes.get('index', []):
+                        artists = index.get('artist', [])
+                        if isinstance(artists, dict):
+                            artists = [artists]
+                        artist_list.extend(artists)
+                    if artist_list:
+                        print(f"  Shows ({len(artist_list)} letter groups):")
+                        for artist in artist_list:
+                            group_id = artist.get('id')
+                            group_name = artist.get('name')
+                            # Drill into each letter group to get actual show directories
+                            try:
+                                dir_response = client.get_music_directory(group_id)
+                                children = dir_response.get('child', [])
+                                if isinstance(children, dict):
+                                    children = [children]
+                                dirs = [c for c in children if c.get('isDir')]
+                                for d in dirs:
+                                    print(f"    - {d.get('title', d.get('name'))} (ID: {d.get('id')})")
+                            except Exception:
+                                print(f"    [{group_name}] (ID: {group_id})")
+                    else:
+                        print("  No directories found")
+                except Exception as e:
+                    print(f"  Error fetching indexes: {e}")
         else:
             print("No music folders found")
     except Exception as e:
