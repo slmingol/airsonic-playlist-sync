@@ -13,7 +13,7 @@ help:
 	@echo "make discover - Find folder/playlist IDs"
 
 build:
-	$(CONTAINER_CMD) build $(DNS_FLAGS) -f docker/Dockerfile -t airsonic-playlist-sync:latest .
+	$(CONTAINER_CMD) build --quiet $(DNS_FLAGS) -f docker/Dockerfile -t airsonic-playlist-sync:latest . > /dev/null
 
 run-dry: build
 	@mkdir -p logs
