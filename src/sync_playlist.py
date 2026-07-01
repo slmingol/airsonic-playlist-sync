@@ -195,14 +195,14 @@ def get_all_songs_from_directory(client: AirsonicClient, directory_id: str,
     return all_songs
 
 
-def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = False, max_songs: int = 15):
+def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = False, max_songs: int = 25):
     """
     Main function to sync songs from a folder to a playlist.
-    
+
     Args:
         config_path: Path to configuration file
         dry_run: If True, show what would be done without making changes
-        max_songs: Maximum number of most recent songs to keep in playlist (default: 15)
+        max_songs: Maximum number of most recent songs to keep in playlist (default: 25)
     """
     # Load configuration
     try:
@@ -359,7 +359,7 @@ if __name__ == '__main__':
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     parser.add_argument('--config', default='config.json', help='Path to config file')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
-    parser.add_argument('--max-songs', type=int, default=15, help='Maximum number of most recent songs to keep in playlist (default: 15)')
+    parser.add_argument('--max-songs', type=int, default=25, help='Maximum number of most recent songs to keep in playlist (default: 25)')
     
     args = parser.parse_args()
     
