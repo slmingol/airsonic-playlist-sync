@@ -145,13 +145,62 @@ def discover_ids(config_path: str = 'config.json'):
     return 0
 
 
+def list_playlist(config_path: str = 'config.json'):
+    """List current contents of the configured target playlist."""
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Configuration file '{config_path}' not found.")
+        return 1
+
+    client = AirsonicClient(
+        server_url=config['server_url'],
+        username=config['username'],
+        password=config['password'],
+        api_version=config.get('api_version', '1.15.0'),
+        client_name=config.get('client_name', 'PlaylistDiscovery')
+    )
+
+    if not client.ping():
+        print("Error: Could not connect to Airsonic server or authentication failed.")
+        return 1
+
+    target_playlist_id = config.get('target_playlist_id')
+    if not target_playlist_id:
+        print("Error: 'target_playlist_id' not set in config.json")
+        return 1
+
+    playlists = client.get_playlists()
+    playlist_name = next((p.get('name') for p in playlists if str(p.get('id')) == str(target_playlist_id)), target_playlist_id)
+
+    playlist = client.get_playlist(target_playlist_id)
+    entries = playlist.get('entry', [])
+    if isinstance(entries, dict):
+        entries = [entries]
+
+    print(f"\nPlaylist: {playlist_name} (ID: {target_playlist_id}) -- {len(entries)} episodes\n")
+    for i, entry in enumerate(entries, 1):
+        title = entry.get('title', 'Unknown')
+        duration = entry.get('duration', 0)
+        mins, secs = divmod(duration, 60)
+        print(f"  {i:>3}. {title} ({mins}:{secs:02d})")
+    print()
+
+    return 0
+
+
 if __name__ == '__main__':
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Discover Airsonic folder and playlist IDs')
     parser.add_argument('--config', default='config.json', help='Path to config file')
-    
+    parser.add_argument('--list', action='store_true', help='List current playlist contents')
+
     args = parser.parse_args()
-    
-    exit_code = discover_ids(args.config)
+
+    if args.list:
+        exit_code = list_playlist(args.config)
+    else:
+        exit_code = discover_ids(args.config)
     sys.exit(exit_code)

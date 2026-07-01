@@ -1,4 +1,4 @@
-.PHONY: help build run run-dry discover up down logs clean
+.PHONY: help build run run-dry discover list up down logs clean
 
 CONTAINER_CMD := $(shell which podman 2>/dev/null || which docker 2>/dev/null)
 DNS_FLAGS := --dns=192.168.7.12 --dns=8.8.8.8
@@ -21,6 +21,7 @@ help:
 	@echo "  $(GREEN)make run$(RESET)                     Run sync once"
 	@echo "  $(GREEN)make run MAX_SONGS=20$(RESET)        Run with custom episode limit $(YELLOW)(default: 25)$(RESET)"
 	@echo "  $(GREEN)make discover$(RESET)                Find folder/playlist IDs"
+	@echo "  $(GREEN)make list$(RESET)                    List current playlist contents"
 	@echo ""
 
 build:
@@ -36,3 +37,6 @@ run: build
 
 discover: build
 	@$(CONTAINER_CMD) run --rm -it $(DNS_FLAGS) --entrypoint python3 -v "$(PWD)/config.json:/config/config.json:ro" airsonic-playlist-sync:latest /app/discover.py --config /config/config.json
+
+list: build
+	@$(CONTAINER_CMD) run --rm $(DNS_FLAGS) --entrypoint python3 -v "$(PWD)/config.json:/config/config.json:ro" airsonic-playlist-sync:latest /app/discover.py --config /config/config.json --list
