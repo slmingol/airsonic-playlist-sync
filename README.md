@@ -2,80 +2,82 @@
 
 [![Build and Publish](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/build-and-publish.yml)
 [![Test](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/test.yml/badge.svg)](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/test.yml)
+[![Cleanup](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/cleanup.yml/badge.svg)](https://github.com/slmingol/airsonic-playlist-sync/actions/workflows/cleanup.yml)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/slmingol/airsonic-playlist-sync?label=release)](https://github.com/slmingol/airsonic-playlist-sync/releases/latest)
+[![GitHub last commit](https://img.shields.io/github/last-commit/slmingol/airsonic-playlist-sync)](https://github.com/slmingol/airsonic-playlist-sync/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/slmingol/airsonic-playlist-sync)](https://github.com/slmingol/airsonic-playlist-sync/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://github.com/slmingol/airsonic-playlist-sync/pkgs/container/airsonic-playlist-sync)
+[![Platforms](https://img.shields.io/badge/platform-amd64%20%7C%20arm64-lightgrey)](https://github.com/slmingol/airsonic-playlist-sync/pkgs/container/airsonic-playlist-sync)
+[![Container](https://img.shields.io/badge/ghcr.io-airsonic--playlist--sync-blue)](https://github.com/slmingol/airsonic-playlist-sync/pkgs/container/airsonic-playlist-sync)
 
 Automatically sync music from an Airsonic/OpenSubsonic folder to a playlist, maintaining only the N most recent episodes.
 
 ## Features
 
-- 🎵 **Smart Sync**: Maintains exactly N most recent songs (configurable, default 15)
-- 📅 **Date-Aware**: Extracts dates from filenames (YYYYMMDD format) for proper sorting
-- ➕ **Auto-Add**: Automatically adds new songs from monitored folder
-- ➖ **Auto-Remove**: Removes old songs beyond the limit to keep playlist fresh
-- 🔄 **Dry-Run Mode**: Preview changes before applying them
-- 🌐 **OpenSubsonic Compatible**: Works with Airsonic-Advanced and other compatible servers
-- 🔐 **Secure**: MD5 salted token authentication
-- 🐳 **Container Ready**: Docker/Podman support with multi-arch images (amd64/arm64)
-- ⏰ **Schedulable**: Run via cron, systemd timer, or Docker Compose scheduler
+- **Smart Sync**: Maintains exactly N most recent songs (configurable, default 25)
+- **Date-Aware**: Extracts dates from filenames (YYYYMMDD format) for proper sorting
+- **Auto-Add**: Automatically adds new songs from monitored folder
+- **Auto-Remove**: Removes old songs beyond the limit to keep playlist fresh
+- **Dry-Run Mode**: Preview changes before applying them
+- **OpenSubsonic Compatible**: Works with Airsonic-Advanced and other compatible servers
+- **Secure**: MD5 salted token authentication
+- **Container Ready**: Docker/Podman support with multi-arch images (amd64/arm64)
+- **Schedulable**: Run via cron, systemd timer, or Docker Compose scheduler
 
 ## Quick Start
 
+### Using Makefile
+
+```bash
+make build              # Build container image
+make discover           # Find folder/playlist IDs
+make list               # List current playlist contents
+make run-dry            # Preview changes (dry-run)
+make run                # Apply sync
+make run MAX_SONGS=10   # Sync with custom episode limit (default: 25)
+```
+
 ### Using Docker/Podman
 
-**With Docker:**
 ```bash
 # Pull the image
 docker pull ghcr.io/slmingol/airsonic-playlist-sync:latest
 
 # Create config file
 cp config.example.json config.json
-# Edit config.json with your credentials
+# Edit config.json with your server URL, username, password, and IDs
 
 # Discover folder and playlist IDs
-docker run --rm -v $(pwd)/config.json:/config/config.json \
+docker run --rm \
+  --entrypoint python3 \
+  -v $(pwd)/config.json:/config/config.json \
   ghcr.io/slmingol/airsonic-playlist-sync:latest \
-  python /app/discover.py --config /config/config.json
+  /app/discover.py --config /config/config.json
 
-# Run sync (dry-run first)
-docker run --rm -v $(pwd)/config.json:/config/config.json \
+# List current playlist contents
+docker run --rm \
+  --entrypoint python3 \
+  -v $(pwd)/config.json:/config/config.json \
+  ghcr.io/slmingol/airsonic-playlist-sync:latest \
+  /app/discover.py --config /config/config.json --list
+
+# Dry-run sync
+docker run --rm \
+  -v $(pwd)/config.json:/config/config.json \
+  -v $(pwd)/logs:/app/logs \
   ghcr.io/slmingol/airsonic-playlist-sync:latest --dry-run
 
 # Run actual sync
-docker run --rm -v $(pwd)/config.json:/config/config.json \
+docker run --rm \
+  -v $(pwd)/config.json:/config/config.json \
+  -v $(pwd)/logs:/app/logs \
   ghcr.io/slmingol/airsonic-playlist-sync:latest
 
 # Keep only 10 most recent episodes
-docker run --rm -v $(pwd)/config.json:/config/config.json \
-  ghcr.io/slmingol/airsonic-playlist-sync:latest --max-songs 10
-```
-
-**With Podman:**
-```bash
-# Pull the image
-podman pull ghcr.io/slmingol/airsonic-playlist-sync:latest
-
-# Create config file
-cp config.example.json config.json
-# Edit config.json with your credentials
-
-# Discover folder and playlist IDs
-podman run --rm -v $(pwd)/config.json:/config/config.json \
-  ghcr.io/slmingol/airsonic-playlist-sync:latest \
-  python /app/discover.py --config /config/config.json
-
-# Run sync (dry-run first)
-podman run --rm -v $(pwd)/config.json:/config/config.json \
-  ghcr.io/slmingol/airsonic-playlist-sync:latest --dry-run
-
-# Run actual sync
-podman run --rm -v $(pwd)/config.json:/config/config.json \
-  ghcr.io/slmingol/airsonic-playlist-sync:latest
-
-# Keep only 10 most recent episodes
-podman run --rm -v $(pwd)/config.json:/config/config.json \
+docker run --rm \
+  -v $(pwd)/config.json:/config/config.json \
+  -v $(pwd)/logs:/app/logs \
   ghcr.io/slmingol/airsonic-playlist-sync:latest --max-songs 10
 ```
 
@@ -86,30 +88,23 @@ podman run --rm -v $(pwd)/config.json:/config/config.json \
 pip install -r requirements.txt
 
 # Discover IDs
-python src/discover.py
+python src/discover.py --config config.json
+
+# List current playlist
+python src/discover.py --config config.json --list
 
 # Run sync
 python src/sync_playlist.py --dry-run
 python src/sync_playlist.py
 ```
 
-### Using Makefile
-
-```bash
-# Build container
-make build
-
-# Discover IDs
-make discover
-
-# Run sync
-make run-dry  # Preview changes
-make run      # Apply changes
-```
-
 ## Configuration
 
-Create `config.json` with your Airsonic credentials:
+Create `config.json` from the example:
+
+```bash
+cp config.example.json config.json
+```
 
 ```json
 {
@@ -123,6 +118,8 @@ Create `config.json` with your Airsonic credentials:
 }
 ```
 
+Run `make discover` to find your `source_directory_id` and `target_playlist_id`.
+
 ## Usage Options
 
 ### Command Line Arguments
@@ -130,9 +127,6 @@ Create `config.json` with your Airsonic credentials:
 ```bash
 # Keep only 10 most recent episodes
 python src/sync_playlist.py --max-songs 10
-
-# Keep 20 episodes (instead of default 15)
-python src/sync_playlist.py --max-songs 20
 
 # Dry run with custom limit
 python src/sync_playlist.py --max-songs 25 --dry-run
@@ -179,7 +173,7 @@ cd airsonic-playlist-sync
 # Install dependencies
 pip install -r requirements.txt
 
-# Run tests (linting)
+# Run linting
 flake8 src/
 
 # Build container locally
@@ -196,6 +190,6 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-- 🐛 [Report Issues](https://github.com/slmingol/airsonic-playlist-sync/issues)
-- 💡 [Request Features](https://github.com/slmingol/airsonic-playlist-sync/issues)
-- 📖 [View Documentation](docs/)
+- [Report Issues](https://github.com/slmingol/airsonic-playlist-sync/issues)
+- [Request Features](https://github.com/slmingol/airsonic-playlist-sync/issues)
+- [View Documentation](docs/)
