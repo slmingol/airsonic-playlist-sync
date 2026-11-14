@@ -168,6 +168,16 @@ class AirsonicClient:
         """Add multiple songs to a playlist."""
         return self.update_playlist(playlist_id, song_ids_to_add=song_ids)
 
+    def replace_playlist(self, playlist_id: str, song_ids: List[str]) -> bool:
+        """Replace playlist contents with an ordered list of song IDs."""
+        params = {'playlistId': playlist_id, 'songId': song_ids}
+        try:
+            self._make_request('createPlaylist', params)
+            return True
+        except Exception as e:
+            print(f"Failed to replace playlist: {e}")
+            return False
+
 
 def get_all_songs_from_directory(client: AirsonicClient, directory_id: str, 
                                   recursive: bool = True) -> List[Dict]:
@@ -300,9 +310,9 @@ def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = Fa
         # Fall back to created date or title
         return song.get('created', title)
     
-    # Sort ALL source songs by date (newest first) and keep only top N
+    # Select top N newest, then reverse to oldest-first for playlist order
     all_songs_sorted = sorted(source_songs, key=get_sort_key, reverse=True)
-    top_songs = all_songs_sorted[:max_songs]
+    top_songs = list(reversed(all_songs_sorted[:max_songs]))
     top_song_ids = {song['id'] for song in top_songs}
     
     print(f"\nTop {len(top_songs)} most recent episodes:")
@@ -314,38 +324,32 @@ def sync_folder_to_playlist(config_path: str = 'config.json', dry_run: bool = Fa
         in_playlist = "✓" if song['id'] in existing_song_ids else " "
         print(f"  [{in_playlist}] {date_key} - {artist} - {title}")
     
-    # Find songs to add (in top 15 but not in current playlist)
-    songs_to_add = [song for song in top_songs if song['id'] not in existing_song_ids]
-    
-    # Find songs to remove (in playlist but not in top 15)
-    indices_to_remove = []
-    for idx, entry in enumerate(playlist_entries):
-        if entry['id'] not in top_song_ids:
-            indices_to_remove.append(idx)
-    
-    if not songs_to_add and not indices_to_remove:
-        print(f"\n✓ Playlist already contains exactly the top {max_songs} most recent episodes!")
+    desired_ids = [song['id'] for song in top_songs]
+    current_ids = [entry['id'] for entry in playlist_entries]
+
+    if desired_ids == current_ids:
+        print(f"\n✓ Playlist already up to date ({max_songs} most recent episodes, oldest-first order)!")
         return 0
-    
+
+    songs_to_add = [s for s in top_songs if s['id'] not in existing_song_ids]
+    ids_to_remove = {entry['id'] for entry in playlist_entries if entry['id'] not in top_song_ids}
+
     print(f"\nChanges:")
     if songs_to_add:
         print(f"  Add {len(songs_to_add)} new song(s)")
-    if indices_to_remove:
-        print(f"  Remove {len(indices_to_remove)} old song(s)")
-    
+    if ids_to_remove:
+        print(f"  Remove {len(ids_to_remove)} old song(s)")
+    if desired_ids != current_ids and not songs_to_add and not ids_to_remove:
+        print(f"  Reorder to oldest-first")
+
     if dry_run:
-        print(f"\n[DRY RUN] Would update playlist to maintain {max_songs} most recent episodes.")
+        print(f"\n[DRY RUN] Would replace playlist with {max_songs} most recent episodes (oldest-first).")
         return 0
-    
-    # Update playlist
+
     print(f"\nUpdating playlist...", end=' ')
-    song_ids_to_add = [song['id'] for song in songs_to_add] if songs_to_add else None
-    
-    if client.update_playlist(target_playlist_id, 
-                             song_ids_to_add=song_ids_to_add,
-                             song_indices_to_remove=indices_to_remove if indices_to_remove else None):
+    if client.replace_playlist(target_playlist_id, desired_ids):
         print("SUCCESS")
-        print(f"\n✓ Playlist now contains the {max_songs} most recent episodes")
+        print(f"\n✓ Playlist now contains the {max_songs} most recent episodes (oldest-first)")
         return 0
     else:
         print("FAILED")

@@ -6,6 +6,7 @@ Helper script to discover Airsonic folder and playlist IDs.
 __version__ = "1.0.0"
 
 import json
+import re
 import sys
 from sync_playlist import AirsonicClient
 
@@ -178,6 +179,13 @@ def list_playlist(config_path: str = 'config.json'):
     entries = playlist.get('entry', [])
     if isinstance(entries, dict):
         entries = [entries]
+
+    def _sort_key(entry):
+        title = entry.get('title', '')
+        m = re.search(r'(\d{8})', title)
+        return m.group(1) if m else entry.get('created', title)
+
+    entries.sort(key=_sort_key)
 
     print(f"\nPlaylist: {playlist_name} (ID: {target_playlist_id}) -- {len(entries)} episodes\n")
     for i, entry in enumerate(entries, 1):

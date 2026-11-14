@@ -2,7 +2,7 @@
 
 CONTAINER_CMD := $(shell which podman 2>/dev/null || which docker 2>/dev/null)
 DNS_FLAGS := --dns=192.168.7.12 --dns=8.8.8.8
-MAX_SONGS ?= 25
+MAX_SONGS ?= 15
 
 BOLD  := \033[1m
 CYAN  := \033[36m
